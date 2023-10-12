@@ -4,7 +4,7 @@
 function menu_root() {
   while true; do
     clear
-    echo  "|------------------------------"
+    echo "|------------------------------"
     echo "| Menú de Administrador (root) |"
     echo "|------------------------------"
     echo "| 1. Agregar Administrador"
