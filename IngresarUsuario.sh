@@ -1,4 +1,4 @@
-s|#!/bin/bash
+#!/bin/bash
 
 # Función para ingresar al sistema
 function ingresar_sistema() {
