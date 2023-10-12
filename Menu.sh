@@ -4,16 +4,17 @@
 function menu_root() {
   while true; do
     clear
-    echo "Menú de Administrador (root)"
+   echo "-------------------------------"
+    echo "| Menú de Administrador (root) |"
     echo "-------------------------------"
-    echo "1. Agregar Administrador"
-    echo "2. Eliminar Administrador"
-    echo "3. Agregar Usuario"
-    echo "4. Eliminar Usuario"
-    echo "5. Crear Estructura del Sistema"
-    echo "6. Crear Informe de Sala de Informática"
-    echo "7. Mostrar Información de Salas de Informática"
-    echo "8. Salir"
+    echo "| 1. Agregar Administrador"
+    echo "| 2. Eliminar Administrador"
+    echo "| 3. Agregar Usuario"
+    echo "| 4. Eliminar Usuario"
+    echo "| 5. Crear Estructura del Sistema"
+    echo "| 6. Crear Informe de Sala de Informática"
+    echo "| 7. Mostrar Información de Salas de Informática"
+    echo "| 8. Salir"
     echo
     read -p "Seleccione una opción: " opcion_root
 
