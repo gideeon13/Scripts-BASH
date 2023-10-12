@@ -1,5 +1,7 @@
 #!/bin/bash
 
+\e]2;Sistema de Relevamiento de Salas de Informática\a
+
 # Menú para el usuario root (administrador)
 function menu_root() {
   while true; do
