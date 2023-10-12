@@ -1,4 +1,4 @@
-s|#!/bin/bash
+#!/bin/bash
 
 # Menú para el usuario root (administrador)
 function menu_root() {
