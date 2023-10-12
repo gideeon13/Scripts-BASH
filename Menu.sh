@@ -15,6 +15,7 @@ function menu_root() {
     echo "| 6. Crear Informe de Sala de Informática"
     echo "| 7. Mostrar Información de Salas de Informática"
     echo "| 8. Salir"
+    echo "|------------------------------"
     echo
     read -p "Seleccione una opción: " opcion_root
 
