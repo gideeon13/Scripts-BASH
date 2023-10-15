@@ -9,21 +9,6 @@ DIRECTORIO_SALAS="$DIRECTORIO_BASE/Salas"
 # Directorio para almacenar registros de acceso
 DIRECTORIO_LOG="$DIRECTORIO_BASE/Logs"
 
-# Archivo de contraseñas (usuario:contraseña)
-ARCHIVO_CONTRASEÑAS="$DIRECTORIO_BASE/Contraseñas.txt"
-
-\e]2;Sistema de Relevamiento de Salas de Informática\a
-
-# Función para asignar los permisos al archivo "Sistema.sh"
-function asignar_permisos_sistema() {
-  chmod 744 "$0"  # Establece permisos rwx (al usuario), r-- (al grupo), r-- (a otros usuarios)
-}
-
-# Función para asignar permisos a los demás archivos del sistema
-function asignar_permisos_archivos() {
-  chmod 600 "$DIRECTORIO_BASE"/*  # Establece permisos rw- (al usuario), --- (al grupo), --- (a otros usuarios)
-}
-
 # Crear directorio principal al iniciar el programa
 function crear_estructura_inicial () {
     if [ ! -d "$DIRECTORIO_BASE" ]; then
@@ -38,6 +23,22 @@ function verificar_archivo_contrasenas() {
   else
     return 1
   fi
+}
+
+# Función para autenticar un usuario
+function autenticar_usuario() {
+  local usuario="$1"
+  local password="$2"
+
+  # Buscar las credenciales del usuario en el archivo de contraseñas
+  if grep -q "^$usuario:" "$ARCHIVO_CONTRASEÑAS"; then
+    hashed_password=$(grep "^$usuario:" "$ARCHIVO_CONTRASEÑAS" | cut -d: -f2)
+    if bcrypt -s "$password" "$hashed_password"; then
+      echo "Autenticacion exitosa."
+      return 0
+    fi
+  fi
+  return 1
 }
 
 # Función para Ingresar al Sistema
@@ -66,22 +67,6 @@ function ingresar_sistema() {
     else
       echo "Credenciales incorrectas."
     fi
-
-# Función para autenticar un usuario
-function autenticar_usuario() {
-  local usuario="$1"
-  local password="$2"
-
-  # Buscar las credenciales del usuario en el archivo de contraseñas
-  if grep -q "^$usuario:" "$ARCHIVO_CONTRASEÑAS"; then
-    hashed_password=$(grep "^$usuario:" "$ARCHIVO_CONTRASEÑAS" | cut -d: -f2)
-    if bcrypt -s "$password" "$hashed_password"; then
-      echo "Autenticacion exitosa."
-      return 0
-    fi
-  fi
-  return 1
-}
 
 # Menú para el usuario root (Administrador)
 function menu_root() {
@@ -350,12 +335,8 @@ function crear_informe() {
     echo
     read -p "Ingrese el nombre de la sala: " nombre_sala
     archivo_sala="$DIRECTORIO_SALAS/$nombre_sala.txt"
-
-    # Verificar si la sala ya existe
-    if [ -e "$archivo_sala" ]; then
-       echo "La sala '$nombre_sala' ya existe."
-    else
     
+    if [ -e "$archivo_sala" ]; then
     # Solicitar información de la sala    
     echo " Ingrese los siguientes datos para la sala '$nombre_sala'"
     echo "........................................................."
@@ -410,9 +391,9 @@ function crear_informe() {
     informe+="  Arquitectura del sistema operativo: $arquitectura_sistema\n"
 
     # Agregar información adicional de las computadoras aquí
-
+    
     informe+="\nInforme generado el $(date '+%Y-%m-%d %H:%M:%S') por $usuario_root\n"
-
+    
     archivo_informe="$DIRECTORIO_LOG/informe_$nombre_sala.txt"
          echo -e "$informe" > "$archivo_informe"
          echo "Informe de la sala '$nombre_sala' creado exitosamente en '$archivo_informe'."
@@ -537,10 +518,6 @@ function mostrar_por_numero_sala() {
        echo "La sala '$numero_sala' no existe."
     fi
 }
-
-# Asignar permisos a los archivos
-asignar_permisos_sistema
-asignar_permisos_archivos
 
 # Iniciar el Sistema
 while true; do
