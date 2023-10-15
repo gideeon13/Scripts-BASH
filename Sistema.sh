@@ -21,6 +21,15 @@ function crear_estructura_inicial () {
     fi
 }
 
+# Función para verificar si el archivo de contraseñas existe
+function verificar_archivo_contrasenas() {
+  if [ -f "$ARCHIVO_CONTRASEÑAS" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 # Función para Ingresar al Sistema
 function ingresar_sistema() {
   # Llama a la función para crear la estructura inicial del Sistema
@@ -161,6 +170,11 @@ function pausa() {
 
 # Función para agregar un Administrador
 function agregar_administrador() {
+  # Verificar si el archivo de contraseñas existe
+  if ! verificar_archivo_contrasenas; then
+    echo "El archivo de contraseñas no existe. Debes crear la estructura del sistema primero."
+    return
+  fi
     clear
     echo " _________________________ "
     echo "|                         |"    
@@ -218,6 +232,11 @@ function eliminar_administrador() {
 
 # Función para agregar un usuario 
 function agregar_usuario() {
+  # Verificar si el archivo de contraseñas existe
+  if ! verificar_archivo_contrasenas; then
+    echo "El archivo de contraseñas no existe. Debes crear la estructura del sistema primero."
+    return
+  fi
     clear
     echo " ___________________ "
     echo "|                   |"    
@@ -307,6 +326,11 @@ function crear_estructura() {
 
 # Función para crear un informe de la sala de informática
 function crear_informe() {
+  # Verificar si el archivo de contraseñas existe
+  if ! verificar_archivo_contrasenas; then
+    echo "El archivo de contraseñas no existe. Debes crear la estructura del sistema primero."
+    return
+  fi
     touch "$archivo_sala"
     clear
     echo " ________________________________________ "
