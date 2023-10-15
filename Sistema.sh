@@ -72,14 +72,16 @@ function menu_root() {
     echo "|                                                 |"
     echo "|            Menú de Administrador (root)         |"
     echo "|_________________________________________________|"
+    echo "|                                                 |"
     echo "| 1. Agregar Administrador                        |"
     echo "| 2. Eliminar Administrador                       |"
     echo "| 3. Agregar Usuario                              |"
     echo "| 4. Eliminar Usuario                             |"
     echo "| 5. Crear Estructura del Sistema                 |"
     echo "| 6. Crear Informe de Sala de Informática         |"
-    echo "| 7. Mostrar Información de Salas de Informática  |"
-    echo "| 8. Salir                                        |"
+    echo "| 7. Eliminar Informe                             |"
+    echo "| 8. Mostrar Información de Salas de Informática  |"
+    echo "| 9. Salir                                        |"
     echo "|_________________________________________________|"
     echo
     read -p "Seleccione una opcion: " opcion_root
@@ -104,9 +106,12 @@ function menu_root() {
         crear_informe
         ;;
       7)
-        mostrar_informacion_sala
+        eliminar_informe
         ;;
       8)
+        mostrar_informacion_sala
+        ;;
+      9)
         exit
         ;;
       *)
@@ -126,6 +131,7 @@ function menu_usuario() {
     echo "|                                                 |"
     echo "|            Menú de Usuario ($usuario)           |"
     echo "|_________________________________________________|"
+    echo "|                                                 |"
     echo "| 1. Mostrar Información de Salas de Informática  |"
     echo "| 2. Salir                                        |"
     echo "|_________________________________________________|"
@@ -273,6 +279,7 @@ function crear_estructura() {
     echo "-..................................- "
     echo "|  Creando Estructura del Sistema  |"
     echo "|..................................|"
+    echo
 
     # Crea el directorio de salas de informática si no existe
     if [ ! -d "$DIRECTORIO_SALAS" ]; then
@@ -298,9 +305,204 @@ function crear_estructura() {
     pausa
 }
 
+# Función para crear un informe de la sala de informática
+function crear_informe() {
+    touch "$archivo_sala"
+    clear
+    echo " ________________________________________ "
+    echo "|                                        |"
+    echo "|  Crear Informe de Sala de Informática  |"
+    echo "|________________________________________|"
+    echo
+    read -p "Ingrese el nombre de la sala: " nombre_sala
+    archivo_sala="$DIRECTORIO_SALAS/$nombre_sala.txt"
 
+    # Verificar si la sala ya existe
+    if [ -e "$archivo_sala" ]; then
+       echo "La sala '$nombre_sala' ya existe."
+    else
+    
+    # Solicitar información de la sala    
+    echo " Ingrese los siguientes datos para la sala '$nombre_sala'"
+    echo "........................................................."
+    read -p "Localidad o nombre de la UTU o Escuela Técnica: " localidad
+    read -p "Departamento donde se encuentra la UTU o Escuela Técnica: " departamento
+    read -p "Cantidad de Salas de Informática disponibles: " cantidad_salas
+  
+    # Obtener información del sistema
+    numero_identificador=$(hostname)
+    nombre_modelo_cpu=$(lscpu | grep "Model name" | cut -d':' -f2 | xargs)
+    cantidad_procesadores=$(lscpu | grep "Socket(s)" | cut -d':' -f2 | xargs)
+    potencia_mhz=$(lscpu | grep "CPU MHz" | cut -d':' -f2 | xargs)
+    familia_cpu=$(lscpu | grep "CPU family" | cut -d':' -f2 | xargs)
+    cache_cpu=$(lscpu | grep "L3 cache" | cut -d':' -f2 | xargs)
 
+    memoria_total=$(free -m | grep "Mem:" | awk '{print $2}')
+    memoria_libre=$(free -m | grep "Mem:" | awk '{print $4}')
+    memoria_cache=$(free -m | grep "Mem:" | awk '{print $6}')
+    memoria_disponible=$(free -m | grep "Mem:" | awk '{print $7}')
 
+    cantidad_unidades_almacenamiento=$(lsblk -no NAME | wc -l)
+
+    nombre_sistema=$(cat /etc/os-release | grep "PRETTY_NAME" | cut -d'"' -f2)
+    nombre_kernel=$(uname -s)
+    version_kernel=$(uname -r)
+    arquitectura_sistema=$(uname -m)
+
+    # Agregar información al informe
+    informe="Informe de Sala de Informática\n\n"
+    informe+="Nombre de la sala: $nombre_sala\n"
+    informe+="Localidad: $(grep 'Localidad' "$archivo_sala" | cut -d':' -f2 | xargs)\n"
+    informe+="Departamento: $(grep 'Departamento' "$archivo_sala" | cut -d':' -f2 | xargs)\n"
+    informe+="Cantidad de Salas de Informática disponibles: $(grep 'Cantidad de Salas' "$archivo_sala" | cut -d':' -f2 | xargs)\n"
+    informe+="Número identificador de la Computadora: $numero_identificador\n"
+    informe+="CPU:\n"
+    informe+="  Nombre del modelo de procesador: $nombre_modelo_cpu\n"
+    informe+="  Cantidad de procesadores: $cantidad_procesadores\n"
+    informe+="  Potencia (Mhz): $potencia_mhz\n"
+    informe+="  Familia: $familia_cpu\n"
+    informe+="  Cache: $cache_cpu\n"
+    informe+="Memoria:\n"
+    informe+="  Memoria Total (MB): $memoria_total\n"
+    informe+="  Memoria Libre (MB): $memoria_libre\n"
+    informe+="  Memoria Cache (MB): $memoria_cache\n"
+    informe+="  Memoria Disponible (MB): $memoria_disponible\n"
+    informe+="Almacenamiento:\n"
+    informe+="  Cantidad de unidades de Almacenamiento: $cantidad_unidades_almacenamiento\n"
+    informe+="Sistema Operativo:\n"
+    informe+="  Nombre del Sistema Operativo: $nombre_sistema\n"
+    informe+="  Nombre del Kernel: $nombre_kernel\n"
+    informe+="  Versión del Kernel: $version_kernel\n"
+    informe+="  Arquitectura del sistema operativo: $arquitectura_sistema\n"
+
+    # Agregar información adicional de las computadoras aquí
+
+    informe+="\nInforme generado el $(date '+%Y-%m-%d %H:%M:%S') por $usuario_root\n"
+
+    archivo_informe="$DIRECTORIO_LOG/informe_$nombre_sala.txt"
+         echo -e "$informe" > "$archivo_informe"
+         echo "Informe de la sala '$nombre_sala' creado exitosamente en '$archivo_informe'."
+    else
+         echo "La sala '$nombre_sala' no existe."
+    fi
+    pausa
+}
+
+# Función para eliminar el informe de sala de informática
+function eliminar_informe() {
+    clear
+    echo " ________________________________ "
+    echo "|                                |"
+    echo "|  Eliminar Sala de Informática  |"
+    echo "|________________________________|"
+    echo
+    read -p "Ingrese el nombre de la sala a eliminar: " nombre_sala
+    archivo_sala="$DIRECTORIO_SALAS/$nombre_sala.txt"
+
+    # Verificar si la sala existe
+    if [ -e "$archivo_sala" ]; then
+       rm "$archivo_sala"
+       echo "Sala de Informática '$nombre_sala' eliminada exitosamente."
+    else
+       echo "La sala '$nombre_sala' no existe."
+    fi
+    pausa
+}
+
+# Función para mostrar información de una sala de informática
+function mostrar_informacion_sala() {
+    clear
+    echo " _______________________________________________ "
+    echo "|                                               |"
+    echo "|  Mostrar Información de Salas de Informática  |"
+    echo "|_______________________________________________|"
+    echo "|                                               |"
+    echo "| 1. Por Departamento                           |"
+    echo "| 2. Por Nombre o Localidad                     |"
+    echo "| 3. Por Número de Sala                         |"
+    echo "| 4. Salir                                      |"
+    echo "|_______________________________________________|"    
+    echo
+    read -p "Seleccione su opción: " opcion_mostrar
+
+    case $opcion_mostrar in
+        1) 
+          clear
+          echo " ........................................"
+          echo "|  Mostrar Información por Departamento  |"
+          echo " ........................................"
+          echo
+          read -p "Ingrese el Departamento: " departamento
+          mostrar_por_departamento "$departamento"
+          ;;
+        2)
+          clear
+          echo " .............................................."
+          echo "|  Mostrar Información por Nombre o Localidad  |"
+          echo " .............................................."
+          echo 
+          read -p "Ingrese el Nombre o Localidad: " nombre_localidad
+          mostrar_por_nombre_localidad "$nombre_localidad"
+          ;;
+        3)
+          clear
+          echo " .........................................."
+          echo "|  Mostrar Información por Número de Sala  |"
+          echo " .........................................."
+          echo
+          read -p "Ingrese el Número de Sala: " numero_sala
+          mostrar_por_numero_sala "$numero_sala"
+          ;;
+        4)
+          return
+          ;;
+        *)
+          echo "Opción no válida. Intente nuevamente."
+          ;;
+    esac
+    pausa
+}
+
+# Función para mostrar información de salas por departamento
+function mostrar_por_departamento() {
+    local departamento="$1"
+    clear
+    echo "Salas de Informática en el Departamento: $departamento"
+    # Buscar y mostrar información de las salas e el departamento
+    for archivo_sala in "$DIRECTORIO_SALAS"/*.txt; do
+       if grep -q "Departamento: $departamento" "$archivo_sala"; then
+          cat "$archivo_sala"
+          echo
+       fi
+     done
+}
+
+# Función para mostrar información de salas por nombre o localidad
+function mostrar_por_nombre_localidad() {
+    local nombre_localidad="$1"
+    clear
+    echo "Salas de Informática con Nombre o Localidad: $nombre_localidad"
+    # Buscar y mostrar información de las salas con el nombre o localidad
+    for archivo_sala in "$DIRECTORIO_SALAS"/*.txt; do
+        if grep -q "Nombre de la Sala: $nombre_localidad\|Localidad: $nombre_localidad" "$archivo_sala"; then
+           cat "$archivo_sala"
+           echo
+        fi
+    done
+}
+
+# Función para mostrar información de salas por número de sala
+function mostrar_por_numero_sala() {
+    local numero_sala="$1"
+    archivo_sala="$DIRECTORIO_SALAS/$numero_sala.txt"
+
+    # Verificar si la sala ya existe
+    if [ -e "$archivo_sala" ]; then
+       cat "$archivo_sala"
+    else
+       echo "La sala '$numero_sala' no existe."
+    fi
+}
 
 # Iniciar el Sistema
 while true; do
