@@ -14,6 +14,16 @@ ARCHIVO_CONTRASEÑAS="$DIRECTORIO_BASE/Contraseñas.txt"
 
 \e]2;Sistema de Relevamiento de Salas de Informática\a
 
+# Función para asignar los permisos al archivo "Sistema.sh"
+function asignar_permisos_sistema() {
+  chmod 744 "$0"  # Establece permisos rwx (al usuario), r-- (al grupo), r-- (a otros usuarios)
+}
+
+# Función para asignar permisos a los demás archivos del sistema
+function asignar_permisos_archivos() {
+  chmod 600 "$DIRECTORIO_BASE"/*  # Establece permisos rw- (al usuario), --- (al grupo), --- (a otros usuarios)
+}
+
 # Crear directorio principal al iniciar el programa
 function crear_estructura_inicial () {
     if [ ! -d "$DIRECTORIO_BASE" ]; then
@@ -527,6 +537,10 @@ function mostrar_por_numero_sala() {
        echo "La sala '$numero_sala' no existe."
     fi
 }
+
+# Asignar permisos a los archivos
+asignar_permisos_sistema
+asignar_permisos_archivos
 
 # Iniciar el Sistema
 while true; do
