@@ -217,6 +217,14 @@ function pausa() {
 
 # Función para agregar un administrador en el sistema operativo
 function agregar_administrador() {
+# Verificar si el archivo de contraseñas existe
+if [ ! -f "$ARCHIVO_CONTRASENAS" ]; then
+    clear
+    imprimir_titulo
+    echo "El archivo de contraseñas no está configurado. Debes crearlo primero."
+    pausa
+    exit 1
+fi
     clear
     echo " _________________________ "
     echo "|                         |"
