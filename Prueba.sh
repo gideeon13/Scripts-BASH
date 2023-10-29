@@ -56,6 +56,7 @@ function crear_estructura_inicial () {
     fi
 }
 
+# Función para Ingresar al Sistema
 function ingresar_sistema() {
     # Llama a la función para crear la estructura inicial del Sistema
     crear_estructura_inicial
@@ -63,18 +64,19 @@ function ingresar_sistema() {
     clear
     imprimir_titulo
     echo
+    echo -e "Usuario del sistema operativo: ${AZUL}$usuario_actual${RESET}"
 
-    local intentos=3
-    local contrasena_valida=false
+    while true; do
+        read -s -p "Ingrese su contraseña del sistema: " contrasena_sistema
 
-    while [ $intentos -gt 0 ] && [ "$contrasena_valida" = false ]; do
-        local usuario_ingresado="$usuario_actual"
-        read -s -p "Ingrese su contraseña del sistema: " contrasena_ingresada
-        echo
+        # Verificar la contraseña del sistema
+        if echo "$contrasena_sistema" | sudo -S true 2>/dev/null; then
+            # Contraseña correcta
+            clear
+            echo "Contraseña del sistema correcta. Ingresando al sistema..."
+            sleep 2
 
-        # Verificar las credenciales contra las cuentas del sistema operativo
-        if su - "$usuario_ingresado" -c "exit" 2>/dev/null && echo "$contrasena_ingresada" | su - "$usuario_ingresado" -c "echo 'OK'" | grep -q "OK"; then
-            contrasena_valida=true
+            # Verificar si el usuario actual es root o un administrador
             if [ "$usuario_actual" == "root" ]; then
                 menu_root
             elif [ "$usuario_actual" == "admin" ]; then
@@ -82,19 +84,14 @@ function ingresar_sistema() {
             else
                 menu_usuario "$usuario_actual"
             fi
+
+            break
         else
-            let "intentos--"
-            echo "Las credenciales ingresadas son incorrectas. Le quedan $intentos intentos."
+            clear
+            echo "La contraseña del sistema no es válida. Vuelve a intentarlo."
         fi
     done
-
-    if [ "$contrasena_valida" = false ]; then
-        clear
-        echo "Se han agotado los intentos. Saliendo del sistema."
-        exit 1
-    fi
 }
-
 
 # Menú para el usuario root (Administrador)
 function menu_root() {
