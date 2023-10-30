@@ -209,7 +209,6 @@ function agregar_administrador() {
 # Verificar si el archivo de contraseñas existe
 if [ ! -f "$ARCHIVO_CONTRASENAS" ]; then
     clear
-    imprimir_titulo
     echo "El archivo de contraseñas no está creado. Debes crearlo primero."
     pausa
     return
