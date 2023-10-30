@@ -91,8 +91,11 @@ function ingresar_sistema() {
         return 0
     fi
 
-    if sudo -u "$usuario" -S <<< "$contrasena" passwd -S -a "$usuario" &>/dev/null; then
-        # La contraseña coincide con la del sistema operativo
+    if su "$usuario" -c "true" -s /bin/bash -p <<EOF
+$contrasena
+EOF
+    then
+        echo "Autenticación exitosa como $usuario."
         seleccionar_menu_segun_rol "$usuario"
         return 0
     fi
