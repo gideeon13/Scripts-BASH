@@ -43,53 +43,6 @@ function crear_estructura_inicial () {
     fi
 }
 
-# Función para verificar la contraseña de root
-function verificar_contrasena_root() {
-    if ! sudo -S true <<< "$contrasena_ingresada" 2> /dev/null; then
-        echo -e "${ROJO}Contraseña de root incorrecta.${RESET}"
-        pausa
-        ingresar_sistema
-    else
-        clear
-        echo -e "Bienvenido, ${AZUL}root${RESET}"
-        pausa
-        menu_root
-    fi
-}
-
-# Función para verificar la contraseña de admin
-function verificar_contrasena_admin() {
-    # Agrega tu lógica para verificar la contraseña de 'admin' aquí
-    # Ejemplo simple: Verificar si la contraseña ingresada es "adminpass"
-    if [ "$contrasena_ingresada" != "adminpass" ]; then
-        echo -e "${ROJO}Contraseña de admin incorrecta.${RESET}"
-        pausa
-        ingresar_sistema
-    else
-        clear
-        echo -e "Bienvenido, ${AZUL}admin${RESET}"
-        pausa
-        menu_administrador "admin"
-    fi
-}
-
-# Función para verificar la contraseña de usuario normal
-function verificar_contrasena_usuario_normal() {
-    local contrasena_guardada=$(sudo grep -w "^$usuario_actual:" /etc/shadow | cut -d':' -f2)
-
-    # Utilizar `openssl` para verificar la contraseña
-    if [ "$(echo "$contrasena_ingresada" | openssl passwd -1 -salt "mysalt" -stdin)" != "$contrasena_guardada" ]; then
-        echo -e "${ROJO}Contraseña de usuario incorrecta.${RESET}"
-        pausa
-        ingresar_sistema
-    else
-        clear
-        echo -e "Bienvenido, ${AZUL}$usuario_actual${RESET}"
-        pausa
-        menu_usuario_normal
-    fi
-}
-
 # Función para Ingresar al Sistema
 function ingresar_sistema() {
     # Llama a la función para crear la estructura inicial del Sistema
@@ -98,17 +51,24 @@ function ingresar_sistema() {
     clear
     imprimir_titulo
     echo
-    
-    read -p "Ingrese su contraseña del sistema: " -s contrasena_ingresada
-    echo  # Agregar un salto de línea después de ingresar la contraseña
+    echo -e "Usuario ingresado en el sistema operativo: ${AMARILLO}$usuario_actual${RESET}"
 
-    # Verificar si el usuario es root, admin o un usuario normal
-    if [ "$usuario_actual" == "root" ]; then
-        verificar_contrasena_root
-    elif [ "$usuario_actual" == "admin" ]; then
-        verificar_contrasena_admin
+    echo
+    read -p "Ingrese su nombre de usuario: " usuario
+    read -s -p "Ingrese su contraseña: " contrasena
+    echo
+
+    # Utiliza el comando `passwd` para verificar las credenciales
+    if sudo passwd -S "$usuario" | grep -q "P" && echo "$usuario:$contrasena" | sudo chpasswd; then
+        clear
+        echo -e "Bienvenido, ${AZUL}$usuario${RESET}"
+        pausa
+        menu_usuario_normal
     else
-        verificar_contrasena_usuario_normal
+        clear
+        echo -e "${ROJO}Credenciales incorrectas.${RESET}"
+        pausa
+        ingresar_sistema
     fi
 }
 
