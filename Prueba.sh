@@ -42,19 +42,19 @@ function crear_estructura_inicial () {
 
 # Función para verificar las credenciales del usuario
 function verificar_credenciales() {
-    local usuario="$1"
-    local contrasena="$2"
+    read -p "Usuario: " usuario
+    read -s -p "Contraseña: " contrasena
 
-    if sudo -v -S <<< "$contrasena" 2>/dev/null; then
-        # La contraseña es correcta
+    if sudo -u "$usuario" sudo -v -S <<< "$contrasena" 2>/dev/null; then
+        # Las credenciales son correctas
         return 0
     else
-        # La contraseña es incorrecta o se produjo un error
+        # Las credenciales son incorrectas o se produjo un error
         return 1
     fi
 }
 
-# Función para ingresar al sistema
+# Función para Ingresar al Sistema
 function ingresar_sistema() {
     # Llama a la función para crear la estructura inicial del Sistema
     crear_estructura_inicial
@@ -62,12 +62,9 @@ function ingresar_sistema() {
     clear
     imprimir_titulo
     echo
-
-    local usuario_actual=$(whoami)
-    read -s -p "Ingrese su contraseña del sistema: " contrasena_sistema
-
-    # Verificar las credenciales del usuario
-    if verificar_credenciales "$usuario_actual" "$contrasena_sistema"; then
+    echo -e "Usuario del sistema operativo: ${AZUL}$usuario_actual${RESET}"
+    
+    if verificar_credenciales; then
         # Las credenciales son correctas
         if [ "$usuario_actual" == "root" ]; then
             menu_root
