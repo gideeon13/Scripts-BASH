@@ -465,10 +465,8 @@ function crear_informe() {
     if [ -e "$archivo_sala" ]; then
         echo "La sala '$nombre_sala' ya existe."
     else
-        # Comprobar si el usuario actual es un administrador
-        if groups "$usuario_actual" | grep -q '\bsudo\b'; then
-            # Si es un administrador, permitir la creación del informe
-            if touch "$archivo_sala" && chmod 600 "$archivo_sala"; then
+        # Crear el archivo con sudo y establecer permisos
+        if sudo touch "$archivo_sala" && sudo chmod 600 "$archivo_sala"; then
             
          # Solicitar información de la sala    
          echo " Ingrese los siguientes datos para la sala '$nombre_sala'"
@@ -534,12 +532,9 @@ Fecha y Hora de creaciòn: $fecha_actual
 Creado por: $usuario
 EOF
 
-                echo "Informe de la sala '$nombre_sala' creado exitosamente en '$archivo_sala'."
-            else
-                echo "Error al crear el archivo de la sala."
-            fi
+            echo "Informe de la sala '$nombre_sala' creado exitosamente en '$archivo_sala'."
         else
-            echo "No tienes permisos para crear informes."
+            echo "Error al crear el archivo de la sala."
         fi
     fi
     pausa
