@@ -376,10 +376,9 @@ fi
     echo
     read -p "Ingrese el nombre de usuario a eliminar: " usuario
 
-    # Verificar si el usuario existe
+    # Verificar si el usuario existe y eliminarlo, redirigiendo los errores a /dev/null
     if id "$usuario" &>/dev/null; then {
-        # Eliminar al usuario del sistema operativo
-        userdel -r "$usuario"
+        userdel -r "$usuario" 2>/dev/null
         echo "Usuario '$usuario' eliminado del sistema operativo."
         
         # Eliminar la cuenta del archivo de contraseñas
