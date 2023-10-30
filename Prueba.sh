@@ -269,70 +269,6 @@ fi
     pausa
 }
 
-function agregar_usuario() {
-    clear
-    echo " ___________________ "
-    echo "|                   |"
-    echo "|  Agregar Usuario  |"
-    echo "|___________________|"
-    echo
-    read -p "Ingrese el nombre de usuario: " usuario
-    if [ -z "$usuario" ]; then
-        echo "El nombre de usuario no puede estar vacío."
-        pausa
-        return
-    fi
-
-    # Verificar si el usuario ya existe en el sistema
-    if id "$usuario" &>/dev/null; then {
-        echo "El usuario '$usuario' ya existe en el sistema."
-        pausa
-        return
-    }
-
-    read -s -p "Ingrese la contraseña del usuario: " contrasena
-    echo
-
-    if [ "$contrasena" = "$(echo "$contrasena" | rev)" ]; then
-        echo "La contraseña es un palíndromo."
-    fi
-
-    # Verificar si el usuario actual es 'root' antes de otorgar permisos de administrador
-    if [ "$usuario_actual" == "root" ]; then
-        # Intenta crear al usuario en el sistema operativo y maneja los errores
-        if useradd -m -s /bin/bash "$usuario"; then
-            if echo "$usuario:$contrasena" | chpasswd; then
-                # Agregar la cuenta al archivo de contraseñas
-                echo "$usuario:$contrasena" >> "$ARCHIVO_CONTRASENAS"
-                echo "Usuario '$usuario' agregado exitosamente al sistema."
-                echo "Cuenta del usuario '$usuario' agregada al archivo de contraseñas."
-                echo
-
-                # Agregar al usuario al grupo 'sudo'
-                if usermod -aG sudo "$usuario"; then
-                    echo "El usuario '$usuario' tiene permisos de administrador."
-                    echo
-                else
-                    echo "Error al otorgar permisos de administrador al usuario '$usuario'."
-                    echo
-                fi
-            else
-                echo "Error al establecer la contraseña del usuario '$usuario'."
-                echo
-            fi
-        else
-            echo "Error al agregar el usuario '$usuario'."
-            echo
-        fi
-    else
-        echo "Solo el usuario 'root' puede otorgar permisos de administrador."
-    fi
-
-    pausa
-}
-
-
-
 # Función para eliminar un administrador en el sistema operativo
 function eliminar_administrador() {
 # Verificar si el archivo de contraseñas existe
@@ -372,7 +308,6 @@ function agregar_usuario() {
 # Verificar si el archivo de contraseñas existe
 if [ ! -f "$ARCHIVO_CONTRASENAS" ]; then
     clear
-    imprimir_titulo
     echo "El archivo de contraseñas no está creado. Debes crearlo primero."
     pausa
     return
@@ -390,38 +325,39 @@ fi
         return
     fi
 
-    # Verificar si el usuario ya existe en el sistema
-   id "$usuario" && {
+ # Verificar si el usuario ya existe en el sistema
+    if id "$usuario" &>/dev/null; then {
         echo "El usuario '$usuario' ya existe en el sistema."
         pausa
         return
     }
 
     read -s -p "Ingrese la contraseña del usuario: " contrasena
-    echo  # Agregar un salto de línea después de ingresar la contraseña
+    echo
 
     if [ "$contrasena" = "$(echo "$contrasena" | rev)" ]; then
         echo "La contraseña es un palíndromo."
     fi
 
-    # Crear al usuario en el sistema operativo
+    # Intenta crear al usuario en el sistema operativo y maneja los errores
     if useradd -m -s /bin/bash "$usuario"; then
-        echo "$usuario:$contrasena" | chpasswd
-        echo
-        echo "Usuario '$usuario' agregado exitosamente al sistema."
-        echo
-
-        # Agregar la cuenta al archivo de contraseñas
-        echo "$usuario:$contrasena" >> "$ARCHIVO_CONTRASENAS"
-        echo "Cuenta del usuario '$usuario' agregada al archivo de contraseñas."
-        echo
+        if echo "$usuario:$contrasena" | chpasswd; then
+            # Agregar la cuenta al archivo de contraseñas
+            echo "$usuario:$contrasena" >> "$ARCHIVO_CONTRASENAS"
+            echo "Usuario '$usuario' agregado exitosamente al sistema."
+            echo "Cuenta del usuario '$usuario' agregada al archivo de contraseñas."
+            echo
+        else
+            echo "Error al establecer la contraseña del usuario '$usuario'."
+            echo
+        fi
     else
         echo "Error al agregar el usuario '$usuario'."
+        echo
     fi
 
     pausa
 }
-
 
 # Función para eliminar un usuario en el sistema operativo
 function eliminar_usuario() {
