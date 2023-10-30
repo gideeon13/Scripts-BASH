@@ -47,7 +47,7 @@ function verificar_credenciales() {
     usuario=$(whoami)
     read -s -p "Contraseña: " contrasena
 
-    if sudo -u "$usuario" sudo -v -S <<< "$contrasena" 2>/dev/null; then
+    if sudo -u "$usuario" -S <<< "$contrasena" true 2>/dev/null; then
         echo Las credenciales son correctas
         return 0
     else
@@ -228,40 +228,109 @@ fi
     fi
 
     read -s -p "Ingrese la contraseña del administrador: " contrasena_admin
-    echo  
+    echo
 
     if [ "$contrasena_admin" = "$(echo "$contrasena_admin" | rev)" ]; then
-        echo "La contraseña es un palíndromo." 
+        echo "La contraseña es un palíndromo."
         echo
     fi
 
-    # Crear al administrador en el sistema operativo
-    if useradd -m -s /bin/bash "$usuario_admin"; then
-        echo "$usuario_admin:$contrasena_admin" | chpasswd
-        echo
-        echo "Administrador '$usuario_admin' agregado exitosamente al sistema."
-        echo
+    # Verificar si el usuario actual es 'root' antes de otorgar permisos de administrador
+    if [ "$usuario_actual" == "root" ]; then
+        # Intenta crear al administrador en el sistema operativo y maneja los errores
+        if useradd -m -s /bin/bash "$usuario_admin"; then
+            if echo "$usuario_admin:$contrasena_admin" | chpasswd; then
+                # Agregar la cuenta al archivo de contraseñas
+                echo "$usuario_admin:$contrasena_admin" >> "$ARCHIVO_CONTRASENAS"
+                echo "Administrador '$usuario_admin' agregado exitosamente al sistema."
+                echo "Cuenta del administrador '$usuario_admin' agregada al archivo de contraseñas."
+                echo
 
-        # Agregar la cuenta al archivo de contraseñas
-        echo "$usuario_admin:$contrasena_admin" >> "$ARCHIVO_CONTRASENAS"
-        echo "Cuenta del administrador '$usuario_admin' agregada al archivo de contraseñas."
-        echo
-
-        # Agregar al administrador al grupo "sudo"
-        if usermod -aG sudo "$usuario_admin"; then
-            echo "El administrador '$usuario_admin' tiene permisos de administrador."
-            echo
+                # Agregar al administrador al grupo 'sudo'
+                if usermod -aG sudo "$usuario_admin"; then
+                    echo "El administrador '$usuario_admin' tiene permisos de administrador."
+                    echo
+                else
+                    echo "Error al otorgar permisos de administrador al administrador '$usuario_admin'."
+                    echo
+                fi
+            else
+                echo "Error al establecer la contraseña del administrador '$usuario_admin'."
+                echo
+            fi
         else
-            echo "Error al otorgar permisos de administrador al administrador '$usuario_admin'."
+            echo "Error al agregar el administrador '$usuario_admin'."
             echo
         fi
     else
-        echo "Error al agregar el administrador '$usuario_admin'."
-        echo
+        echo "Solo el usuario 'root' puede otorgar permisos de administrador."
     fi
 
     pausa
 }
+
+function agregar_usuario() {
+    clear
+    echo " ___________________ "
+    echo "|                   |"
+    echo "|  Agregar Usuario  |"
+    echo "|___________________|"
+    echo
+    read -p "Ingrese el nombre de usuario: " usuario
+    if [ -z "$usuario" ]; then
+        echo "El nombre de usuario no puede estar vacío."
+        pausa
+        return
+    fi
+
+    # Verificar si el usuario ya existe en el sistema
+    if id "$usuario" &>/dev/null; then {
+        echo "El usuario '$usuario' ya existe en el sistema."
+        pausa
+        return
+    }
+
+    read -s -p "Ingrese la contraseña del usuario: " contrasena
+    echo
+
+    if [ "$contrasena" = "$(echo "$contrasena" | rev)" ]; then
+        echo "La contraseña es un palíndromo."
+    fi
+
+    # Verificar si el usuario actual es 'root' antes de otorgar permisos de administrador
+    if [ "$usuario_actual" == "root" ]; then
+        # Intenta crear al usuario en el sistema operativo y maneja los errores
+        if useradd -m -s /bin/bash "$usuario"; then
+            if echo "$usuario:$contrasena" | chpasswd; then
+                # Agregar la cuenta al archivo de contraseñas
+                echo "$usuario:$contrasena" >> "$ARCHIVO_CONTRASENAS"
+                echo "Usuario '$usuario' agregado exitosamente al sistema."
+                echo "Cuenta del usuario '$usuario' agregada al archivo de contraseñas."
+                echo
+
+                # Agregar al usuario al grupo 'sudo'
+                if usermod -aG sudo "$usuario"; then
+                    echo "El usuario '$usuario' tiene permisos de administrador."
+                    echo
+                else
+                    echo "Error al otorgar permisos de administrador al usuario '$usuario'."
+                    echo
+                fi
+            else
+                echo "Error al establecer la contraseña del usuario '$usuario'."
+                echo
+            fi
+        else
+            echo "Error al agregar el usuario '$usuario'."
+            echo
+        fi
+    else
+        echo "Solo el usuario 'root' puede otorgar permisos de administrador."
+    fi
+
+    pausa
+}
+
 
 
 # Función para eliminar un administrador en el sistema operativo
