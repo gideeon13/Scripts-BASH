@@ -33,6 +33,25 @@ function crear_estructura_inicial () {
     fi
 }
 
+# Función para seleccionar el menú según el rol del usuario
+function seleccionar_menu_segun_rol() {
+    local rol="$1"
+    case "$rol" in
+        "root")
+            menu_root
+            ;;
+        "admin")
+            menu_administrador
+            ;;
+        "usuario")
+            menu_usuario
+            ;;
+        *)
+            echo "Rol no válido: $rol."
+            ;;
+    esac
+}
+
 # Función para autenticar desde el archivo de contraseñas
 function autenticar_desde_archivo() {
     local usuario="$1"
@@ -66,35 +85,21 @@ function ingresar_sistema() {
     read -p "Ingrese el nombre de usuario: " usuario
     read -s -p "Ingrese la contraseña: " contrasena
 
-    # Intenta autenticar usando el archivo de contraseñas
     if autenticar_desde_archivo "$usuario" "$contrasena"; then
+        # Autenticación exitosa desde el archivo de contraseñas
+        seleccionar_menu_segun_rol "$usuario"
         return 0
     fi
 
-    # Comprueba si el usuario es root
-    if [ "$usuario" == "root" ] && [ "$contrasena" == "tu_contrasena_de_root" ]; then
-        echo "Autenticación exitosa como root."
-        menu_root
+    if sudo -u "$usuario" -S <<< "$contrasena" passwd -S -a "$usuario" &>/dev/null; then
+        # La contraseña coincide con la del sistema operativo
+        seleccionar_menu_segun_rol "$usuario"
         return 0
     fi
 
-    # Comprueba si el usuario es un administrador
-    if [ "$usuario" == "admin" ] && [ "$contrasena" == "tu_contrasena_de_admin" ]; then
-        echo "Autenticación exitosa como administrador."
-        menu_administrador
-        return 0
-    fi
-
-    # Comprueba si el usuario es un usuario normal
-    if [ "$usuario" == "usuario" ] && [ "$contrasena" == "tu_contrasena_de_usuario" ]; then
-        echo "Autenticación exitosa como usuario normal."
-        menu_usuario
-        return 0
-    }
-
-    # Si las credenciales no coinciden con ninguna cuenta, muestra un mensaje de error
-    echo "Credenciales incorrectas."
-    return 1
+    clear
+    echo "Credenciales incorrectas. Vuelve a intentarlo."
+    pausa
 }
 
 # Menú para el usuario root (Administrador)
