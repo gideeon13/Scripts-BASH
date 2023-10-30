@@ -466,7 +466,7 @@ function crear_informe() {
         echo "La sala '$nombre_sala' ya existe."
     else
         # Comprobar si el usuario actual es un administrador
-        if [ "$usuario_actual" == "root" ] || [ "$usuario_actual" == "admin" ]; then
+        if groups "$usuario_actual" | grep -q '\bsudo\b'; then
             # Si es un administrador, permitir la creación del informe
             if touch "$archivo_sala" && chmod 600 "$archivo_sala"; then
             
