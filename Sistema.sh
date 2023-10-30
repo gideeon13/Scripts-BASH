@@ -52,21 +52,6 @@ function seleccionar_menu_segun_rol() {
     esac
 }
 
-# Función para autenticar desde el archivo de contraseñas
-function autenticar_desde_archivo() {
-    local usuario="$1"
-    local contrasena="$2"
-    local linea
-    while IFS= read -r linea; do
-        local campos=($linea)
-        if [ "${campos[0]}" == "$usuario" ] && [ "${campos[1]}" == "$contrasena" ]; then
-            echo "Autenticación exitosa desde el archivo de contraseñas."
-            return 0
-        fi
-    done < "$ARCHIVO_CONTRASENAS"
-    return 1
-}
-
 # Función para Ingresar al Sistema
 function ingresar_sistema() {
     # Llama a la función para crear la estructura inicial del Sistema
@@ -85,24 +70,17 @@ function ingresar_sistema() {
     read -p "Ingrese el nombre de usuario: " usuario
     read -s -p "Ingrese la contraseña: " contrasena
 
-    if autenticar_desde_archivo "$usuario" "$contrasena"; then
-        # Autenticación exitosa desde el archivo de contraseñas
-        seleccionar_menu_segun_rol "$usuario"
-        return 0
-    fi
-
     if su "$usuario" -c "true" -s /bin/bash -p <<EOF
 $contrasena
 EOF
     then
         echo "Autenticación exitosa como $usuario."
         seleccionar_menu_segun_rol "$usuario"
-        return 0
+    else
+        clear
+        echo "Credenciales incorrectas. Vuelve a intentarlo."
+        pausa
     fi
-
-    clear
-    echo "Credenciales incorrectas. Vuelve a intentarlo."
-    pausa
 }
 
 # Menú para el usuario root (Administrador)
