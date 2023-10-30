@@ -325,12 +325,12 @@ fi
     fi
 
  # Verificar si el usuario ya existe en el sistema
-    if id "$usuario" &>/dev/null; then {
+    if id "$usuario" &>/dev/null; then
         echo "El usuario '$usuario' ya existe en el sistema."
         pausa
         return
-    }
-
+    fi
+    
     read -s -p "Ingrese la contraseña del usuario: " contrasena
     echo
 
