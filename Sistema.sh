@@ -457,17 +457,13 @@ function crear_informe() {
     echo
     read -p "Ingrese el nombre de la sala: " nombre_sala
     archivo_sala="$DIRECTORIO_SALAS/$nombre_sala.txt"
-    
+
     # Verificar si el archivo de la sala ya existe
     if [ -e "$archivo_sala" ]; then
-       echo "La sala '$nombre_sala' ya existe."
+        echo "La sala '$nombre_sala' ya existe."
     else
-    
-    #Crear el archivo de la sala si no existe
-    touch "$archivo_sala"
-    
-    # Agregar permisos al archivo
-    chmod 600 "$archivo_sala"
+        # Intentar crear el archivo y establecer permisos
+        if touch "$archivo_sala" && chmod 600 "$archivo_sala"; then
     
          # Solicitar información de la sala    
          echo " Ingrese los siguientes datos para la sala '$nombre_sala'"
@@ -535,8 +531,11 @@ EOF
 
          echo "Informe de la sala '$nombre_sala' creado exitosamente en '$archivo_sala'."
          echo
+    else
+            echo "Error al crear el archivo de la sala."
     fi
-    pausa
+fi
+pausa
 }
 
 # Función para eliminar el informe de sala de informática
