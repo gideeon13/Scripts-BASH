@@ -36,23 +36,57 @@ imprimir_titulo() {
     echo -e "${RESET}"
 }
 
-# Función para capturar errores
-function try() {
-    local error_file=$(mktemp)
-    if "$@" 2> "$error_file"; then
-        rm "$error_file"
-        return 0
-    else
-        local error_message=$(<"$error_file")
-        rm "$error_file"
-        return 1
-    fi
-}
-
 # Crear directorio principal al iniciar el programa
 function crear_estructura_inicial () {
     if [ ! -d "$DIRECTORIO_BASE" ]; then
        mkdir -p "$DIRECTORIO_BASE"
+    fi
+}
+
+# Función para verificar la contraseña de root
+function verificar_contrasena_root() {
+    if ! sudo -S true <<< "$contrasena_ingresada" 2> /dev/null; then
+        echo -e "${ROJO}Contraseña de root incorrecta.${RESET}"
+        pausa
+        ingresar_sistema
+    else
+        clear
+        echo -e "Bienvenido, ${AZUL}root${RESET}"
+        pausa
+        menu_root
+    fi
+}
+
+# Función para verificar la contraseña de admin
+function verificar_contrasena_admin() {
+    # Agrega tu lógica para verificar la contraseña de 'admin' aquí
+    # Ejemplo simple: Verificar si la contraseña ingresada es "adminpass"
+    if [ "$contrasena_ingresada" != "adminpass" ]; then
+        echo -e "${ROJO}Contraseña de admin incorrecta.${RESET}"
+        pausa
+        ingresar_sistema
+    else
+        clear
+        echo -e "Bienvenido, ${AZUL}admin${RESET}"
+        pausa
+        menu_administrador "admin"
+    fi
+}
+
+# Función para verificar la contraseña de usuario normal
+function verificar_contrasena_usuario_normal() {
+    local contrasena_guardada=$(sudo grep -w "^$usuario_actual:" /etc/shadow | cut -d':' -f2)
+
+    # Utilizar `openssl` para verificar la contraseña
+    if [ "$(echo "$contrasena_ingresada" | openssl passwd -1 -salt "mysalt" -stdin)" != "$contrasena_guardada" ]; then
+        echo -e "${ROJO}Contraseña de usuario incorrecta.${RESET}"
+        pausa
+        ingresar_sistema
+    else
+        clear
+        echo -e "Bienvenido, ${AZUL}$usuario_actual${RESET}"
+        pausa
+        menu_usuario_normal
     fi
 }
 
@@ -65,48 +99,16 @@ function ingresar_sistema() {
     imprimir_titulo
     echo
     
-    # Verificar si el usuario está logueado en el sistema
-    if [ -z "$usuario_actual" ]; then
-        usuario_actual=$(whoami)  # Obtener el usuario actual del sistema
-        echo -e "Usuario del sistema operativo: ${AZUL}$usuario_actual${RESET}"
-    else
-        echo -e "Usuario logueado: ${AZUL}$usuario_actual${RESET}"
-    fi
+    read -p "Ingrese su contraseña del sistema: " -s contrasena_ingresada
+    echo  # Agregar un salto de línea después de ingresar la contraseña
 
-    # Verificar si el usuario actual es root o un administrador
+    # Verificar si el usuario es root, admin o un usuario normal
     if [ "$usuario_actual" == "root" ]; then
-        menu_root
+        verificar_contrasena_root
     elif [ "$usuario_actual" == "admin" ]; then
-        menu_administrador "$usuario_actual"
+        verificar_contrasena_admin
     else
-        verificar_usuario_contraseña
-    fi
-
-    clear
-    echo "Las credenciales ingresadas son incorrectas. Vuelve a intentarlo."
-    pausa
-}
-
-# Función para verificar usuario y contraseña almacenados en el sistema operativo
-function verificar_usuario_contraseña() {
-    clear
-    usuario_actual=$(whoami)  # Obtener el usuario actual del sistema
-    contrasena_sistema=$(getent shadow $usuario_actual | cut -d: -f2)
-
-    echo -e "Usuario del sistema operativo: ${AZUL}$usuario_actual${RESET}"
-    read -s -p "Ingrese su contraseña del sistema: " contrasena_ingresada
-    echo
-
-    if [ "$contrasena_ingresada" == "$contrasena_sistema" ]; then
-        clear
-        echo -e "Bienvenido, ${AZUL}$usuario_actual${RESET}"
-        pausa
-        menu_usuario "$usuario_actual"
-    else
-        clear
-        echo -e "${ROJO}Contraseña incorrecta.${RESET}"
-        pausa
-        ingresar_sistema
+        verificar_contrasena_usuario_normal
     fi
 }
 
@@ -256,7 +258,7 @@ fi
     fi
 
     # Verificar si el administrador ya existe en el sistema
-    try id "$usuario_admin" && {
+    id "$usuario_admin" && {
         echo "El administrador '$usuario_admin' ya existe en el sistema."
         pausa
         return
@@ -265,13 +267,13 @@ fi
     read -s -p "Ingrese la contraseña del administrador: " contrasena_admin
     echo  
 
-    if [ "$contrasena_admin" = "$(echo "$contrasena_admin" | rev)" ]; then try
+    if [ "$contrasena_admin" = "$(echo "$contrasena_admin" | rev)" ]; then
         echo "La contraseña es un palíndromo." 
         echo
     fi
 
     # Crear al administrador en el sistema operativo
-    if try useradd -m -s /bin/bash "$usuario_admin"; then
+    if useradd -m -s /bin/bash "$usuario_admin"; then
         echo "$usuario_admin:$contrasena_admin" | chpasswd
         echo
         echo "Administrador '$usuario_admin' agregado exitosamente al sistema."
@@ -283,7 +285,7 @@ fi
         echo
 
         # Agregar al administrador al grupo "sudo"
-        if try usermod -aG sudo "$usuario_admin"; then
+        if usermod -aG sudo "$usuario_admin"; then
             echo "El administrador '$usuario_admin' tiene permisos de administrador."
             echo
         else
@@ -357,7 +359,7 @@ fi
     fi
 
     # Verificar si el usuario ya existe en el sistema
-    try id "$usuario" && {
+   id "$usuario" && {
         echo "El usuario '$usuario' ya existe en el sistema."
         pausa
         return
@@ -371,7 +373,7 @@ fi
     fi
 
     # Crear al usuario en el sistema operativo
-    if try useradd -m -s /bin/bash "$usuario"; then
+    if useradd -m -s /bin/bash "$usuario"; then
         echo "$usuario:$contrasena" | chpasswd
         echo
         echo "Usuario '$usuario' agregado exitosamente al sistema."
