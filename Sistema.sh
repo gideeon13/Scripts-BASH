@@ -33,25 +33,6 @@ function crear_estructura_inicial () {
     fi
 }
 
-# Función para seleccionar el menú según el rol del usuario
-function seleccionar_menu_segun_rol() {
-    local rol="$1"
-    case "$rol" in
-        "root")
-            menu_root
-            ;;
-        "admin")
-            menu_administrador
-            ;;
-        "usuario")
-            menu_usuario
-            ;;
-        *)
-            echo "Rol no válido: $rol."
-            ;;
-    esac
-}
-
 # Función para Ingresar al Sistema
 function ingresar_sistema() {
     # Llama a la función para crear la estructura inicial del Sistema
@@ -66,6 +47,7 @@ function ingresar_sistema() {
     echo -e "${RESET}"
     echo
     echo -e "Usuario del sistema operativo: ${AZUL}$usuario_actual${RESET}"
+    echo
     
     read -p "Ingrese el nombre de usuario: " usuario
     read -s -p "Ingrese la contraseña: " contrasena
@@ -75,11 +57,18 @@ $contrasena
 EOF
     then
         echo "Autenticación exitosa como $usuario."
-        seleccionar_menu_segun_rol "$usuario"
+        if [ "$usuario" == "root" ]; then
+            menu_root
+        elif [ "$usuario" == "admin" ]; then
+            menu_administrador "$usuario"
+        else
+            menu_usuario
+        fi
     else
         clear
         echo "Credenciales incorrectas. Vuelve a intentarlo."
         pausa
+        ingresar_sistema  # Reintenta la autenticación si las credenciales son incorrectas
     fi
 }
 
