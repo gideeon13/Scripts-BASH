@@ -40,6 +40,21 @@ function crear_estructura_inicial () {
     fi
 }
 
+# Función para verificar las credenciales del usuario
+function verificar_credenciales() {
+    local usuario="$1"
+    local contrasena="$2"
+
+    if sudo -v -S <<< "$contrasena" 2>/dev/null; then
+        # La contraseña es correcta
+        return 0
+    else
+        # La contraseña es incorrecta o se produjo un error
+        return 1
+    fi
+}
+
+# Función para ingresar al sistema
 function ingresar_sistema() {
     # Llama a la función para crear la estructura inicial del Sistema
     crear_estructura_inicial
@@ -48,27 +63,25 @@ function ingresar_sistema() {
     imprimir_titulo
     echo
 
-    usuario=$(whoami)
+    local usuario_actual=$(whoami)
+    read -s -p "Ingrese su contraseña del sistema: " contrasena_sistema
 
-    if [ "$usuario" == "root" ] || [ "$usuario" == "admin" ]; then
-        read -p "Ingrese su nombre de usuario: " usuario_ingresado
-        read -s -p "Ingrese su contraseña: " contrasena_ingresada
-        echo  # Agrega un salto de línea después de la contraseña
-
-        if verificar_credenciales "$usuario_ingresado" "$contrasena_ingresada"; then
-            if [ "$usuario_ingresado" == "root" ]; then
-                menu_root
-            elif [ "$usuario_ingresado" == "admin" ]; then
-                menu_administrador "$usuario_ingresado"
-            fi
+    # Verificar las credenciales del usuario
+    if verificar_credenciales "$usuario_actual" "$contrasena_sistema"; then
+        # Las credenciales son correctas
+        if [ "$usuario_actual" == "root" ]; then
+            menu_root
+        elif [ "$usuario_actual" == "admin" ]; then
+            menu_administrador "$usuario_actual"
         else
-            echo "Credenciales incorrectas. Vuelve a intentarlo."
+            menu_usuario "$usuario_actual"
         fi
     else
-        echo "El usuario actual no tiene acceso a esta funcionalidad."
+        clear
+        echo "Las credenciales ingresadas son incorrectas. Vuelve a intentarlo."
+        pausa
     fi
 }
-
 
 # Menú para el usuario root (Administrador)
 function menu_root() {
