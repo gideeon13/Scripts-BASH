@@ -9,9 +9,6 @@ AMARILLO='\033[0;33m'
 AZUL='\033[0;34m'
 RESET='\033[0m'
 
-# Detectar el nombre del usuario del sistema operativo
-usuario_actual=$(whoami)
-
 # Directorio base del Sistema
 DIRECTORIO_BASE="Sistema de Relevamiento de Salas"
 
@@ -43,7 +40,6 @@ function crear_estructura_inicial () {
     fi
 }
 
-# Función para Ingresar al Sistema
 function ingresar_sistema() {
     # Llama a la función para crear la estructura inicial del Sistema
     crear_estructura_inicial
@@ -51,26 +47,28 @@ function ingresar_sistema() {
     clear
     imprimir_titulo
     echo
-    echo -e "Usuario ingresado en el sistema operativo: ${AMARILLO}$usuario_actual${RESET}"
 
-    echo
-    read -p "Ingrese su nombre de usuario: " usuario
-    read -s -p "Ingrese su contraseña: " contrasena
-    echo
+    usuario=$(whoami)
 
-    # Utiliza el comando `passwd` para verificar las credenciales
-    if sudo passwd -S "$usuario" | grep -q "P" && echo "$usuario:$contrasena" | sudo chpasswd; then
-        clear
-        echo -e "Bienvenido, ${AZUL}$usuario${RESET}"
-        pausa
-        menu_usuario_normal
+    if [ "$usuario" == "root" ] || [ "$usuario" == "admin" ]; then
+        read -p "Ingrese su nombre de usuario: " usuario_ingresado
+        read -s -p "Ingrese su contraseña: " contrasena_ingresada
+        echo  # Agrega un salto de línea después de la contraseña
+
+        if verificar_credenciales "$usuario_ingresado" "$contrasena_ingresada"; then
+            if [ "$usuario_ingresado" == "root" ]; then
+                menu_root
+            elif [ "$usuario_ingresado" == "admin" ]; then
+                menu_administrador "$usuario_ingresado"
+            fi
+        else
+            echo "Credenciales incorrectas. Vuelve a intentarlo."
+        fi
     else
-        clear
-        echo -e "${ROJO}Credenciales incorrectas.${RESET}"
-        pausa
-        ingresar_sistema
+        echo "El usuario actual no tiene acceso a esta funcionalidad."
     fi
 }
+
 
 # Menú para el usuario root (Administrador)
 function menu_root() {
