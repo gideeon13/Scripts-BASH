@@ -62,7 +62,12 @@ EOF
         elif [ "$usuario" == "admin" ]; then
             menu_administrador "$usuario"
         else
-            menu_usuario
+            # Verificar si el usuario tiene permisos de administrador
+            if groups "$usuario" | grep -q '\bsudo\b'; then
+                menu_administrador "$usuario"
+            else
+                menu_usuario
+            fi
         fi
     else
         clear
